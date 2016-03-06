@@ -32,7 +32,7 @@ typedef ssize_t (*compareFunc)(const fileInfo *, const fileInfo *);
 
 char *module_name;
 
-void print_error(char *module_name, char *error_msg, char *file_name) {
+void print_error(const char *module_name, const char *error_msg, const char *file_name) {
     fprintf(stderr, "%s: %s %s\n", module_name, error_msg, file_name ? file_name : "");
 }
 
@@ -80,10 +80,10 @@ int is_dir(const char *const parent_path, const char *const entry_name) {
     return entry_info.st_mode && S_IFDIR;
 }
 
-void files_in_dir(const char *const path, filesList *sorted_files) {
+void files_in_dir(const char *path, filesList *sorted_files, compareFunc compare_func) {
     DIR *dir_stream;
     struct dirent *dir_entry;
-    if (!(dir_entry = opendir(path))) {
+    if (!(dir_stream = opendir(path))) {
         print_error(module_name, strerror(errno), path);
         return;
     }
@@ -94,10 +94,10 @@ void files_in_dir(const char *const path, filesList *sorted_files) {
         if (is_dir(path, entry_name)) {
             char *subdir = alloca(strlen(path) + strlen(entry_name) + 2);
             file_path(subdir, path, entry_name);
-            files_in_dir(subdir, sorted_files);
+            files_in_dir(subdir, sorted_files, compare_func);
         } else {
-            struct fileInfo *file = malloc(sizeof(struct fileInfo));
-            add_file(sorted_files, file);
+            fileInfo *file = malloc(sizeof(fileInfo));
+            add_file(file, sorted_files, compare_func);
         }
 
     }
@@ -105,13 +105,11 @@ void files_in_dir(const char *const path, filesList *sorted_files) {
 
 int get_sort_type(const char *param_str){
     if (strcmp(param_str, "1") == 0){
-        *sort_type = BY_SIZE;
-        return 0;
+        return BY_SIZE;
     }
 
     if (strcmp(param_str, "2") == 0){
-        *sort_type = BY_NAME;
-        return 0;
+        return BY_NAME;
     }
 
     return -1;
@@ -139,16 +137,16 @@ int main(int argc, char *argv[]) {
     }
 
     sortType sort_type;
-    if ((sort_type = get_sort_type(argv[3])) == -1){
+    if ((sort_type = (sortType)get_sort_type(argv[3])) == -1){
         print_error(module_name, "invalid sort type", NULL);
         return 1;
     }
 
     compareFunc compare_func = (sort_type == BY_NAME)?compare_files_by_name:compare_files_by_size;
 
-    struct filesList sorted_files;
+    filesList sorted_files;
     sorted_files.files_count = 0;
     sorted_files.files = NULL;
 
-    files_in_dir(argv[1], sorted_files, compare_func);
+    files_in_dir(argv[1], &sorted_files, compare_func);
 }
