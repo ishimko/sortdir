@@ -58,9 +58,9 @@ void add_file(fileInfo *file, filesList *sorted_files, compareFunc compare_func)
 }
 
 void file_path(char *dest, const char *const path, const char *const name) {
-    strcpy(dest, path);
-    strcpy(dest, "/");
-    strcpy(dest, name);
+    strcat(dest, path);
+    strcat(dest, "/");
+    strcat(dest, name);
 }
 
 int is_dir(const char *const parent_path, const char *const entry_name) {
