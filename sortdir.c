@@ -13,8 +13,8 @@
 #define FOLDER_PERMISSIONS 0700
 
 typedef enum {
-    BY_NAME,
-    BY_SIZE
+    BY_NAME = 0,
+    BY_SIZE = 1
 } sortType;
 
 typedef struct {
@@ -103,7 +103,7 @@ void files_in_dir(const char *const path, filesList *sorted_files) {
     }
 }
 
-int get_sort_type(const char *param_str, sortType *sort_type){
+int get_sort_type(const char *param_str){
     if (strcmp(param_str, "1") == 0){
         *sort_type = BY_SIZE;
         return 0;
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     }
 
     sortType sort_type;
-    if (get_sort_type(argv[3], &sort_type) == -1){
+    if ((sort_type = get_sort_type(argv[3])) == -1){
         print_error(module_name, "invalid sort type", NULL);
         return 1;
     }
