@@ -6,4 +6,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(SOURCE_FILES
     sortdir.c)
 
-add_executable(sortdir ${SOURCE_FILES})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+add_executable(sortdir.out ${SOURCE_FILES})
