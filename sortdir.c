@@ -48,11 +48,12 @@ void add_file(fileInfo *file, filesList *sorted_files, compareFunc compare_func)
     int position;
     for (position = 0; (position < sorted_files->files_count) && (compare_func(file, sorted_files->files[position]) < 0); position++);
 
-    for (int i = position; i < sorted_files->files_count; i++){
+    sorted_files->files = realloc(sorted_files->files, ++(sorted_files->files_count));
+
+    for (int i = position; i < sorted_files->files_count - 1; i++){
         sorted_files->files[i+1] = sorted_files->files[i];
     };
 
-    sorted_files->files = realloc(sorted_files->files, ++(sorted_files->files_count));
     sorted_files->files[sorted_files->files_count - 1] = file;
 }
 
