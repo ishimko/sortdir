@@ -77,8 +77,7 @@ int is_dir(const char *const parent_path, const char *const entry_name) {
         return 0;
     }
 
-    return (S_ISDIR(entry_info.st_mode));
-
+    return entry_info.st_mode && S_IFDIR;
 }
 
 void files_in_dir(const char *const path, filesList *sorted_files) {
