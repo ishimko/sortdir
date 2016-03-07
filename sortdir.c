@@ -13,6 +13,7 @@
 
 #define ARGS_COUNT 4
 #define BUFFER_SIZE 512
+#define FOLDER_PERMISSIONS 0744
 
 typedef enum {
     BY_NAME = 0,
@@ -49,7 +50,7 @@ ssize_t compare_files_by_size(const fileInfo *f1, const fileInfo *f2) {
 void add_file(fileInfo *file, filesList *sorted_files, compareFunc compare_func) {
     int position;
     for (position = 0;
-         (position < sorted_files->files_count) && (compare_func(file, sorted_files->files[position]) < 0); position++);
+         (position < sorted_files->files_count) && (compare_func(file, sorted_files->files[position]) > 0); position++);
 
     sorted_files->files = realloc(sorted_files->files, sizeof(fileInfo*)*(++(sorted_files->files_count)));
 
@@ -73,7 +74,7 @@ int is_dir(const char *parent_path, const char *entry_name) {
     char *full_path = alloca(strlen(parent_path) + strlen(entry_name) + 2);
     file_path(full_path, parent_path, entry_name);
 
-    if (lstat(full_path, &entry_info) == -1) {
+    if (stat(full_path, &entry_info) == -1) {
         print_error(module_name, strerror(errno), full_path);
         return 0;
     }
@@ -87,7 +88,7 @@ off_t file_size(const char *parent_path, const char *file_name){
 
     file_path(full_path, parent_path, file_name);
 
-    if (lstat(full_path, &file_info) == -1) {
+    if (stat(full_path, &file_info) == -1) {
         print_error(module_name, strerror(errno), full_path);
         return 0;
     }
@@ -189,24 +190,31 @@ int main(int argc, char *argv[]) {
     module_name = basename(argv[0]);
 
     if (argc != ARGS_COUNT) {
-        print_error(module_name, "wrong number of parameters", NULL);
+        print_error(module_name, "Wrong number of parameters", NULL);
         return 1;
     }
 
-    struct stat param_info;
-    if (stat(argv[1], &param_info) == -1) {
-        print_error(module_name, strerror(errno), argv[1]);
-        return 1;
+    struct stat out_dir_info;
+    if (stat(argv[2], &out_dir_info) == -1) {
+        if (errno != ENOENT){
+            print_error(module_name, strerror(errno), argv[2]);
+            return 1;
+        }
+        if (mkdir(argv[2], FOLDER_PERMISSIONS) == -1) {
+            print_error(module_name, strerror(errno), argv[2]);
+            return 1;
+        }
+    } else {
+        if (!S_ISDIR(out_dir_info.st_mode)){
+            print_error(module_name, "Not a directory", argv[2]);
+            return 1;
+        }
     }
 
-//    if (mkdir(argv[2], FOLDER_PERMISSIONS) == -1) {
-//        print_error(module_name, strerror(errno), argv[2]);
-//        return 1;
-//    }
 
     sortType sort_type;
     if ((sort_type = (sortType) get_sort_type(argv[3])) == -1) {
-        print_error(module_name, "invalid sort type", NULL);
+        print_error(module_name, "Invalid sort type", NULL);
         return 1;
     }
 
