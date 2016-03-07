@@ -52,13 +52,11 @@ void add_file(fileInfo *file, filesList *sorted_files, compareFunc compare_func)
     for (position = 0;
          (position < sorted_files->files_count) && (compare_func(file, sorted_files->files[position]) > 0); position++);
 
-    sorted_files->files = realloc(sorted_files->files, sizeof(fileInfo*)*(++(sorted_files->files_count)));
+    sorted_files->files = realloc(sorted_files->files, sizeof(fileInfo *) * (++(sorted_files->files_count)));
 
-    if (position != sorted_files->files_count - 1){
-        for (size_t i = sorted_files->files_count - 1; i > position; i--) {
-            sorted_files->files[i] = sorted_files->files[i - 1];
-        };
-    }
+    for (size_t i = sorted_files->files_count - 1; i > position; i--) {
+        sorted_files->files[i] = sorted_files->files[i - 1];
+    };
 
     sorted_files->files[position] = file;
 }
@@ -82,7 +80,7 @@ int is_dir(const char *parent_path, const char *entry_name) {
     return entry_info.st_mode & S_IFDIR;
 }
 
-off_t file_size(const char *parent_path, const char *file_name){
+off_t file_size(const char *parent_path, const char *file_name) {
     struct stat file_info;
     char *full_path = alloca(strlen(parent_path) + strlen(file_name) + 2);
 
@@ -126,11 +124,11 @@ void files_in_dir(const char *path, filesList *sorted_files, compareFunc compare
     }
 }
 
-void copy_file(const char *src_path, const char *dest_path){
+void copy_file(const char *src_path, const char *dest_path) {
     char buffer[BUFFER_SIZE];
     int src, dest;
 
-    if ((src = open(src_path, O_RDONLY)) == -1){
+    if ((src = open(src_path, O_RDONLY)) == -1) {
         print_error(module_name, strerror(errno), src_path);
         return;
     }
@@ -139,8 +137,8 @@ void copy_file(const char *src_path, const char *dest_path){
     char *tmp_dest_path = alloca(strlen(dest_path) + 10);
 
     strcpy(tmp_dest_path, dest_path);
-    while ((dest = open(tmp_dest_path, O_WRONLY | O_CREAT | O_EXCL)) == -1){
-        if (errno == EEXIST){
+    while ((dest = open(tmp_dest_path, O_WRONLY | O_CREAT | O_EXCL)) == -1) {
+        if (errno == EEXIST) {
             sprintf(tmp_dest_path, "%s (%d)", dest_path, ++copies_count);
         } else {
             print_error(module_name, strerror(errno), tmp_dest_path);
@@ -149,24 +147,24 @@ void copy_file(const char *src_path, const char *dest_path){
     }
 
     ssize_t bytes_count = 0;
-    while ((bytes_count = read(src, buffer, BUFFER_SIZE)) > 0 && bytes_count != -1){
-        if (write(dest, buffer, (size_t)bytes_count) == -1){
+    while ((bytes_count = read(src, buffer, BUFFER_SIZE)) > 0 && bytes_count != -1) {
+        if (write(dest, buffer, (size_t) bytes_count) == -1) {
             print_error(module_name, strerror(errno), dest_path);
             return;
         }
     }
 
-    if (bytes_count == -1){
+    if (bytes_count == -1) {
         print_error(module_name, strerror(errno), src_path);
         return;
     }
 }
 
-void copy_files_list(filesList *files_to_copy, const char *dest_folder){
+void copy_files_list(filesList *files_to_copy, const char *dest_folder) {
     int i;
     char dest_path[PATH_MAX];
     char src_path[PATH_MAX];
-    for (i = 0; i < files_to_copy->files_count; i++){
+    for (i = 0; i < files_to_copy->files_count; i++) {
         file_path(dest_path, dest_folder, files_to_copy->files[i]->name);
         file_path(src_path, files_to_copy->files[i]->path, files_to_copy->files[i]->name);
         copy_file(src_path, dest_path);
@@ -196,7 +194,7 @@ int main(int argc, char *argv[]) {
 
     struct stat out_dir_info;
     if (stat(argv[2], &out_dir_info) == -1) {
-        if (errno != ENOENT){
+        if (errno != ENOENT) {
             print_error(module_name, strerror(errno), argv[2]);
             return 1;
         }
@@ -205,7 +203,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     } else {
-        if (!S_ISDIR(out_dir_info.st_mode)){
+        if (!S_ISDIR(out_dir_info.st_mode)) {
             print_error(module_name, "Not a directory", argv[2]);
             return 1;
         }
