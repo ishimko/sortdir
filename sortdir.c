@@ -205,8 +205,14 @@ int main(int argc, char *argv[]) {
 
     char src_dir[PATH_MAX];
     char dest_dir[PATH_MAX];
-    realpath(argv[1], src_dir);
-    realpath(argv[2], dest_dir);
+    if (!realpath(argv[1], src_dir)){
+        print_error(module_name, strerror(errno), argv[1]);
+        return 1;
+    };
+    if (!realpath(argv[2], dest_dir)){
+        print_error(module_name, strerror(errno), argv[2]);
+        return 1;
+    };
 
     struct stat out_dir_info;
     if (stat(dest_dir, &out_dir_info) == -1) {
