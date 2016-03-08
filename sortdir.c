@@ -203,23 +203,28 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    char src_dir[PATH_MAX];
+    char dest_dir[PATH_MAX];
+    realpath(argv[1], src_dir);
+    realpath(argv[2], dest_dir);
+
     struct stat out_dir_info;
-    if (stat(argv[2], &out_dir_info) == -1) {
+    if (stat(dest_dir, &out_dir_info) == -1) {
         if (errno != ENOENT) {
-            print_error(module_name, strerror(errno), argv[2]);
+            print_error(module_name, strerror(errno), dest_dir);
             return 1;
         }
-        if (mkdir(argv[2], FOLDER_PERMISSIONS) == -1) {
-            print_error(module_name, strerror(errno), argv[2]);
+        if (mkdir(dest_dir, FOLDER_PERMISSIONS) == -1) {
+            print_error(module_name, strerror(errno), dest_dir);
             return 1;
         }
     } else {
         if (!S_ISDIR(out_dir_info.st_mode)) {
-            print_error(module_name, "Not a directory", argv[2]);
+            print_error(module_name, "Not a directory", dest_dir);
             return 1;
         }
-        if (access(argv[2], W_OK) == -1){
-            print_error(module_name, strerror(errno), argv[2]);
+        if (access(dest_dir, W_OK) == -1){
+            print_error(module_name, strerror(errno), dest_dir);
             return 1;
         }
     }
@@ -237,8 +242,8 @@ int main(int argc, char *argv[]) {
     sorted_files.files_count = 0;
     sorted_files.files = NULL;
 
-    files_in_dir(argv[1], &sorted_files, compare_func);
-    copy_files_list(&sorted_files, argv[2]);
+    files_in_dir(src_dir, &sorted_files, compare_func);
+    copy_files_list(&sorted_files, dest_dir);
 
     for (int i = 0; i < sorted_files.files_count; i++){
         free(sorted_files.files[i]);
