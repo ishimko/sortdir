@@ -95,10 +95,10 @@ void files_in_dir(const char *path, filesList *sorted_files, compareFunc compare
         if (!strcmp(".", entry_name) || !strcmp("..", entry_name))
             continue;
 
-        char* full_path = alloca(strlen(entry_name) + strlen(path) + 2);
+        char *full_path = alloca(strlen(entry_name) + strlen(path) + 2);
         file_path(full_path, path, entry_name);
         struct stat entry_info;
-        if (lstat(full_path, &entry_info) == -1){
+        if (lstat(full_path, &entry_info) == -1) {
             print_error(module_name, strerror(errno), full_path);
             continue;
         }
@@ -116,7 +116,7 @@ void files_in_dir(const char *path, filesList *sorted_files, compareFunc compare
         }
     }
 
-    if (closedir(dir_stream)){
+    if (closedir(dir_stream) == -1) {
         print_error(module_name, strerror(errno), path);
     }
 }
@@ -139,7 +139,9 @@ void copy_file(const char *src_path, const char *dest_path) {
             sprintf(tmp_dest_path, "%s (%d)", dest_path, ++copies_count);
         } else {
             print_error(module_name, strerror(errno), tmp_dest_path);
-            close(src);
+            if (close(src) == -1) {
+                print_error(module_name, strerror(errno), src_path);
+            };
             return;
         }
     }
@@ -149,15 +151,23 @@ void copy_file(const char *src_path, const char *dest_path) {
         if (write(dest, buffer, (size_t) bytes_count) == -1) {
             print_error(module_name, strerror(errno), dest_path);
 
-            close(src);
-            close(dest);
+            if (close(src) == -1){
+                print_error(module_name, strerror(errno), src_path);
+            };
+            if (close(dest) == -1){
+                print_error(module_name, strerror(errno), src_path);
+            };
 
             return;
         }
     }
 
-    close(src);
-    close(dest);
+    if (close(src) == -1){
+        print_error(module_name, strerror(errno), src_path);
+    };
+    if (close(dest) == -1){
+        print_error(module_name, strerror(errno), src_path);
+    };
 
     if (bytes_count == -1) {
         print_error(module_name, strerror(errno), src_path);
@@ -199,11 +209,11 @@ int main(int argc, char *argv[]) {
 
     char src_dir[PATH_MAX];
     char dest_dir[PATH_MAX];
-    if (!realpath(argv[1], src_dir)){
+    if (!realpath(argv[1], src_dir)) {
         print_error(module_name, strerror(errno), argv[1]);
         return 1;
     };
-    if (!realpath(argv[2], dest_dir)){
+    if (!realpath(argv[2], dest_dir)) {
         print_error(module_name, strerror(errno), argv[2]);
         return 1;
     };
@@ -223,7 +233,7 @@ int main(int argc, char *argv[]) {
             print_error(module_name, "Not a directory", dest_dir);
             return 1;
         }
-        if (access(dest_dir, W_OK) == -1){
+        if (access(dest_dir, W_OK) == -1) {
             print_error(module_name, strerror(errno), dest_dir);
             return 1;
         }
@@ -245,7 +255,7 @@ int main(int argc, char *argv[]) {
     files_in_dir(src_dir, &sorted_files, compare_func);
     copy_files_list(&sorted_files, dest_dir);
 
-    for (int i = 0; i < sorted_files.files_count; i++){
+    for (int i = 0; i < sorted_files.files_count; i++) {
         free(sorted_files.files[i]);
     }
 }
