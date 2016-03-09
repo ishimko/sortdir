@@ -67,19 +67,6 @@ void file_path(char *dest, const char *const path, const char *const name) {
     strcat(dest, name);
 }
 
-int is_dir(const char *parent_path, const char *entry_name) {
-    struct stat entry_info;
-    char *full_path = alloca(strlen(parent_path) + strlen(entry_name) + 2);
-    file_path(full_path, parent_path, entry_name);
-
-    if (stat(full_path, &entry_info) == -1) {
-        print_error(module_name, strerror(errno), full_path);
-        return 0;
-    }
-
-    return entry_info.st_mode & S_IFDIR;
-}
-
 off_t file_size(const char *parent_path, const char *file_name) {
     struct stat file_info;
     char *full_path = alloca(strlen(parent_path) + strlen(file_name) + 2);
@@ -108,17 +95,24 @@ void files_in_dir(const char *path, filesList *sorted_files, compareFunc compare
         if (!strcmp(".", entry_name) || !strcmp("..", entry_name))
             continue;
 
-        if (is_dir(path, entry_name)) {
-            char *subdir = alloca(strlen(path) + strlen(entry_name) + 2);
+        char* full_path = alloca(strlen(entry_name) + strlen(path) + 2);
+        file_path(full_path, path, entry_name);
+        struct stat entry_info;
+        if (lstat(full_path, &entry_info) == -1){
+            print_error(module_name, strerror(errno), full_path);
+            continue;
+        }
 
-            file_path(subdir, path, entry_name);
-            files_in_dir(subdir, sorted_files, compare_func);
+        if (S_ISDIR(entry_info.st_mode)) {
+            files_in_dir(full_path, sorted_files, compare_func);
         } else {
-            fileInfo *file = malloc(sizeof(fileInfo));
-            strcpy(file->name, entry_name);
-            strcpy(file->path, path);
-            file->file_size = file_size(path, entry_name);
-            add_file(file, sorted_files, compare_func);
+            if (S_ISREG(entry_info.st_mode)) {
+                fileInfo *file = malloc(sizeof(fileInfo));
+                strcpy(file->name, entry_name);
+                strcpy(file->path, path);
+                file->file_size = file_size(path, entry_name);
+                add_file(file, sorted_files, compare_func);
+            }
         }
     }
 
