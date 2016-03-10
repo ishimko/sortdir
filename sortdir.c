@@ -234,8 +234,30 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    struct stat out_dir_info;
+    if (stat(argv[3], &out_dir_info) == -1) {
+        if (errno != ENOENT) {
+            print_error(module_name, strerror(errno), argv[3]);
+            return 1;
+        }
+        if (mkdir(argv[3], FOLDER_PERMISSIONS) == -1) {
+            print_error(module_name, strerror(errno), argv[3]);
+            return 1;
+        }
+    } else {
+        if (!S_ISDIR(out_dir_info.st_mode)) {
+            print_error(module_name, "Not a directory", argv[3]);
+            return 1;
+        }
+        if (access(argv[3], W_OK) == -1) {
+            print_error(module_name, strerror(errno), argv[3]);
+            return 1;
+        }
+    }
+
     char src_dir[PATH_MAX];
     char dest_dir[PATH_MAX];
+
     if (!realpath(argv[1], src_dir)) {
         print_error(module_name, strerror(errno), argv[1]);
         return 1;
@@ -244,28 +266,6 @@ int main(int argc, char *argv[]) {
         print_error(module_name, strerror(errno), argv[3]);
         return 1;
     };
-
-    struct stat out_dir_info;
-    if (stat(dest_dir, &out_dir_info) == -1) {
-        if (errno != ENOENT) {
-            print_error(module_name, strerror(errno), dest_dir);
-            return 1;
-        }
-        if (mkdir(dest_dir, FOLDER_PERMISSIONS) == -1) {
-            print_error(module_name, strerror(errno), dest_dir);
-            return 1;
-        }
-    } else {
-        if (!S_ISDIR(out_dir_info.st_mode)) {
-            print_error(module_name, "Not a directory", dest_dir);
-            return 1;
-        }
-        if (access(dest_dir, W_OK) == -1) {
-            print_error(module_name, strerror(errno), dest_dir);
-            return 1;
-        }
-    }
-
 
     sortType sort_type;
     if ((sort_type = (sortType) get_sort_type(argv[2])) == -1) {
