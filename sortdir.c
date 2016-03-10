@@ -213,8 +213,8 @@ int main(int argc, char *argv[]) {
         print_error(module_name, strerror(errno), argv[1]);
         return 1;
     };
-    if (!realpath(argv[2], dest_dir)) {
-        print_error(module_name, strerror(errno), argv[2]);
+    if (!realpath(argv[3], dest_dir)) {
+        print_error(module_name, strerror(errno), argv[3]);
         return 1;
     };
 
@@ -241,7 +241,7 @@ int main(int argc, char *argv[]) {
 
 
     sortType sort_type;
-    if ((sort_type = (sortType) get_sort_type(argv[3])) == -1) {
+    if ((sort_type = (sortType) get_sort_type(argv[2])) == -1) {
         print_error(module_name, "Invalid sort type", NULL);
         return 1;
     }
