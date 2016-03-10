@@ -50,16 +50,6 @@ ssize_t compare_files_by_name(const fileInfo *f1, const fileInfo *f2) {
         while (!isalnum(f2_name[j]) && j < f2_len){
             j++;
         }
-        if (i == f1_len - 1){
-            if (j != f2_len - 1){
-                return -1;
-            }
-            return strcmp(f1->name, f2->name);
-        };
-
-        if (j == f2_len - 1){
-            return 1;
-        }
 
         if (toupper(f1_name[i]) == toupper(f2_name[j])){
             continue;
@@ -67,7 +57,7 @@ ssize_t compare_files_by_name(const fileInfo *f1, const fileInfo *f2) {
 
         return toupper(f1_name[i]) - toupper(f2_name[j]);
     };
-    return 0;
+    return f1_len - f2_len;
 }
 
 ssize_t compare_files_by_size(const fileInfo *f1, const fileInfo *f2) {
