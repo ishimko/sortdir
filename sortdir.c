@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #define ARGS_COUNT 4
 #define BUFFER_SIZE 512
@@ -40,6 +41,26 @@ void print_error(const char *module_name, const char *error_msg, const char *fil
 }
 
 ssize_t compare_files_by_name(const fileInfo *f1, const fileInfo *f2) {
+    char *f1_name = f1->name, *f2_name = f2->name;
+    size_t f1_len = strlen(f1_name), f2_len = strlen(f2_name);
+    for (size_t i = 0, j = 0; i < f1_len && j < f2_len; i++, j++){
+        while (!isalnum(f1_name[i]) && i < f1_len){
+            i++;
+        }
+        while (!isalnum(f2_name[j]) && j < f2_len){
+            j++;
+        }
+        if (i == f1_len - 1){
+            if (j != f2_len - 1){
+                return -1;
+            }
+            return strcmp(f1->name, f2->name);
+        }
+        if (f1_name[i] == f2_name[j]){
+            continue;
+        }
+        return f1_name[i] - f2_name[j];
+    };
     return strcmp(f1->name, f2->name);
 }
 
