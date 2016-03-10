@@ -61,7 +61,7 @@ ssize_t compare_files_by_name(const fileInfo *f1, const fileInfo *f2) {
         }
         return f1_name[i] - f2_name[j];
     };
-    return strcmp(f1->name, f2->name);
+    return 0;
 }
 
 ssize_t compare_files_by_size(const fileInfo *f1, const fileInfo *f2) {
