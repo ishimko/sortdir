@@ -21,8 +21,8 @@ typedef enum {
 } sortType;
 
 typedef struct {
-    char path[PATH_MAX];
-    char name[FILENAME_MAX];
+    char *path;
+    char *name;
     off_t file_size;
 } fileInfo;
 
@@ -89,6 +89,7 @@ void files_in_dir(const char *path, filesList *sorted_files, compareFunc compare
         return;
     }
 
+    errno = 0;
     while ((dir_entry = readdir(dir_stream)) != NULL) {
         char *entry_name = dir_entry->d_name;
 
@@ -100,6 +101,7 @@ void files_in_dir(const char *path, filesList *sorted_files, compareFunc compare
         struct stat entry_info;
         if (lstat(full_path, &entry_info) == -1) {
             print_error(module_name, strerror(errno), full_path);
+            errno = 0;
             continue;
         }
 
@@ -108,12 +110,20 @@ void files_in_dir(const char *path, filesList *sorted_files, compareFunc compare
         } else {
             if (S_ISREG(entry_info.st_mode)) {
                 fileInfo *file = malloc(sizeof(fileInfo));
+
+                file->name = malloc(strlen(entry_name) + 1);
                 strcpy(file->name, entry_name);
+
+                file->path = malloc(strlen(path) + 1);
                 strcpy(file->path, path);
+
                 file->file_size = file_size(path, entry_name);
                 add_file(file, sorted_files, compare_func);
             }
         }
+    }
+    if (errno){
+        print_error(module_name, strerror(errno), path);
     }
 
     if (closedir(dir_stream) == -1) {
@@ -256,6 +266,8 @@ int main(int argc, char *argv[]) {
     copy_files_list(&sorted_files, dest_dir);
 
     for (int i = 0; i < sorted_files.files_count; i++) {
+        free(sorted_files.files[i]->path);
+        free(sorted_files.files[i]->name);
         free(sorted_files.files[i]);
     }
 }
