@@ -61,7 +61,11 @@ ssize_t compare_files_by_name(const fileInfo *f1, const fileInfo *f2) {
 }
 
 ssize_t compare_files_by_size(const fileInfo *f1, const fileInfo *f2) {
-    return f1->file_size - f2->file_size;
+    ssize_t result = f1->file_size - f2->file_size;
+    if (!result){
+        return compare_files_by_name(f1, f2);
+    }
+    return result;
 }
 
 void add_file(fileInfo *file, filesList *sorted_files, compareFunc compare_func) {
